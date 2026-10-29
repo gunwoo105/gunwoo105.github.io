@@ -9,21 +9,38 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 <html lang="ko">
   <head>
     <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={description} /><meta name="theme-color" content="#f7f8f4" />
+    <meta name="description" content={description} /><meta name="theme-color" content="#fafbfc" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" /><link rel="canonical" href={canonical} />
     <meta property="og:type" content="website" /><meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} /><meta property="og:url" content={canonical} />
     <title>{pageTitle}</title>
+    <script is:inline>try { document.documentElement.dataset.theme = localStorage.getItem('gunwoo-theme') || 'light'; } catch {}</script>
   </head>
   <body>
     <a class="skip-link" href="#main">본문으로 건너뛰기</a>
-    <div class="site-shell">
-      <header class="site-header">
-        <a class="brand" href="/" aria-label="gunwoo.log 홈"><span class="brand-mark">g<span>.</span></span><span>gunwoo<span class="brand-dot">.</span>log</span></a>
-        <nav aria-label="주 메뉴"><a href="/#posts">글 목록</a><a href="/about/">소개</a><a class="github-link" href="https://github.com/gunwoo105" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a></nav>
-      </header>
-      <main id="main"><slot /></main>
-      <footer class="site-footer"><div><a class="footer-brand" href="/">gunwoo<span>.</span>log</a><p>배우고, 만들고, 기록합니다.</p></div><div class="footer-right"><a href="https://github.com/gunwoo105" target="_blank" rel="noopener noreferrer">GitHub ↗</a><p>© {new Date().getFullYear()} gunwoo105</p></div></footer>
-    </div>
+    <header class="site-header">
+      <div class="header-inner shell">
+        <a class="brand" href="/" aria-label="gunwoo.log 홈"><span class="brand-mark">g<span>.</span></span><span class="brand-name">GUNWOO LOG<small>by gunwoo105</small></span></a>
+        <nav aria-label="주 메뉴"><a href="/#posts">글</a><a href="/#topics">주제</a><a href="/about/">소개</a><a href="https://github.com/gunwoo105" target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
+        <button class="theme-toggle" type="button" aria-label="테마 변경" title="테마 변경"><span aria-hidden="true">◐</span></button>
+      </div>
+    </header>
+    <main id="main"><slot /></main>
+    <footer class="site-footer"><div class="shell footer-inner"><div><a class="footer-brand" href="/">gunwoo<span>.</span>log</a><p>배우고, 만들고, 기록합니다.</p></div><div class="footer-right"><a href="https://github.com/gunwoo105" target="_blank" rel="noopener noreferrer">GitHub ↗</a><p>© {new Date().getFullYear()} gunwoo105</p></div></div></footer>
+    <script>
+      const button = document.querySelector<HTMLButtonElement>('.theme-toggle');
+      function updateThemeButton() {
+        const dark = document.documentElement.dataset.theme === 'dark';
+        button?.setAttribute('aria-label', dark ? '밝은 테마로 변경' : '어두운 테마로 변경');
+        button?.setAttribute('aria-pressed', String(dark));
+      }
+      updateThemeButton();
+      button?.addEventListener('click', () => {
+        const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = theme;
+        try { localStorage.setItem('gunwoo-theme', theme); } catch {}
+        updateThemeButton();
+      });
+    </script>
   </body>
 </html>

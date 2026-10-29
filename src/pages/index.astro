@@ -1,20 +1,42 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostList from '../components/PostList.astro';
-import { getPublishedPosts } from '../lib/posts';
+import { formatDate, getPublishedPosts, postUrl } from '../lib/posts';
 const posts = await getPublishedPosts();
 const tags = [...new Set(posts.flatMap((post) => post.data.tags))].sort((a, b) => a.localeCompare(b));
+const featured = posts[0];
 ---
 <BaseLayout>
-  <section class="hero" aria-labelledby="hero-title">
-    <div class="hero-copy"><p class="eyebrow"><span class="status-dot"></span> A LITTLE SPACE ON THE INTERNET</p><h1 id="hero-title">생각을 코드로,<br /><em>배움을 기록으로.</em></h1><p class="hero-description">안녕하세요, 건우입니다.<br />개발하며 발견한 것들과 작은 배움의 순간을 기록합니다.</p><a class="text-link" href="#posts">기록 살펴보기 <span aria-hidden="true">↘</span></a></div>
-    <div class="hero-art" aria-hidden="true"><div class="art-grid"></div><div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><div class="art-core"><span>g.</span></div><span class="art-label art-label-top">NOTES ON<br />BUILDING THINGS</span><span class="art-label art-label-bottom">EST. 2026<br />ONLINE, ANYWHERE</span><span class="art-cross">✳</span></div>
-    <div class="hero-bottom"><span>GUNWOO'S DIGITAL GARDEN</span><span>SCROLL TO EXPLORE ↓</span></div>
+  <section class="hero shell" aria-labelledby="hero-title">
+    <div class="hero-copy"><p class="eyebrow"><span class="status-dot"></span> 개발하며 남기는 생각과 경험</p><h1 id="hero-title">배우고, 만들고,<br />기록합니다<span class="accent">.</span></h1><p class="hero-description">안녕하세요, 건우입니다.<br />개발하며 발견한 것들과 작은 배움의 순간을 기록합니다.</p><a class="text-link" href="/about/">이 블로그에 대하여 <span aria-hidden="true">↗</span></a></div>
+    {featured && <a class="featured-note" href={postUrl(featured)}><div class="note-top"><span>가장 최근의 기록</span><span aria-hidden="true">↗</span></div><div class="note-visual" aria-hidden="true"><span class="note-code">&lt; LOG /&gt;</span><span class="note-visual-title">Build.<br />Learn.<br />Repeat<span>.</span></span><span class="note-visual-bottom">A NOTE TO MY FUTURE SELF</span></div><div class="note-content"><span class="eyebrow">{featured.data.tags[0] || '기록'}</span><h2>{featured.data.title}</h2><div class="note-date"><time datetime={featured.data.date.toISOString()}>{formatDate(featured.data.date)}</time><span>읽어보기 →</span></div></div></a>}
   </section>
-  <section class="journal" id="posts" aria-labelledby="posts-title">
-    <div class="section-heading"><div><p class="eyebrow">THE JOURNAL <span class="eyebrow-line"></span> {String(posts.length).padStart(2, '0')} ENTRIES</p><h2 id="posts-title">최근 기록<span>.</span></h2><p>차곡차곡 쌓아가는 생각과 배움</p></div><span class="section-side">WRITTEN WITH CURIOSITY ✳</span></div>
-    {tags.length > 0 && <div class="tag-list" aria-label="주제별 글"><span class="tag-label">TOPICS</span>{tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}/`}># {tag}</a>)}</div>}
-    <PostList posts={posts} />
-  </section>
-  <section class="about-banner"><div><p class="eyebrow">A NOTE FROM ME</p><h2>좋은 질문에서<br /><em>좋은 기록이 시작됩니다.</em></h2><p>궁금한 것을 탐색하고, 알게 된 것을 나눕니다.</p></div><a href="/about/" class="round-link" aria-label="블로그 소개 읽기">↗</a></section>
+  <div class="content-grid shell">
+    <section class="journal" id="posts" aria-labelledby="posts-title">
+      <div class="section-heading"><div><p class="eyebrow">THE JOURNAL</p><h2 id="posts-title">최근 기록 <span class="count">{posts.length}</span></h2></div><a class="subtle-link" href="#topics">주제 살펴보기 ↗</a></div>
+      <div class="topic-tabs"><a class="active" href="/#posts">전체 기록</a>{tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}/`}>{tag}</a>)}</div>
+      <div class="search-box"><label for="post-search">글 검색</label><input id="post-search" type="search" placeholder="제목, 내용 또는 태그 검색" autocomplete="off" /></div>
+      <PostList posts={posts} /><p class="empty-state search-empty" hidden>검색 결과가 없습니다.</p>
+    </section>
+    <aside class="sidebar" aria-label="블로그 정보와 주제">
+      <section class="profile-card"><div class="profile-avatar" aria-hidden="true">g<span>.</span></div><h2>gunwoo105</h2><p>배우고 만들며 얻은 생각을<br />차곡차곡 기록합니다.</p><a href="https://github.com/gunwoo105" target="_blank" rel="noopener noreferrer">GitHub 프로필 ↗</a></section>
+      <section class="sidebar-topics" id="topics"><div class="sidebar-heading"><h2>주제별 기록</h2><span>{tags.length}</span></div>{tags.length ? <ul>{tags.map((tag) => <li><a href={`/tags/${encodeURIComponent(tag)}/`}><span>{tag}</span><span>{posts.filter((post) => post.data.tags.includes(tag)).length}</span></a></li>)}</ul> : <p>아직 주제가 없습니다.</p>}</section>
+      <p class="sidebar-note">작은 배움들이 모여<br />다음 이야기가 됩니다 <span>✳</span></p>
+    </aside>
+  </div>
+  <script>
+    const search = document.querySelector<HTMLInputElement>('#post-search');
+    const rows = [...document.querySelectorAll<HTMLElement>('.post-row')];
+    const empty = document.querySelector<HTMLElement>('.search-empty');
+    search?.addEventListener('input', () => {
+      const query = search.value.trim().toLowerCase();
+      let visible = 0;
+      for (const row of rows) {
+        const match = (row.dataset.search || '').includes(query);
+        row.hidden = !match;
+        if (match) visible++;
+      }
+      if (empty) empty.hidden = visible > 0 || rows.length === 0;
+    });
+  </script>
 </BaseLayout>
